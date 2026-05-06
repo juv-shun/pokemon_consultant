@@ -1,0 +1,1 @@
+セッション開始時に、.claude/CALUDE.md と .claude/rules 配下のマークダウンファイルを必ず読むこと。
