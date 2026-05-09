@@ -1,5 +1,5 @@
 ---
-name: champions-trend
+name: battle-data
 description: Pokemon Champions の最新流行ランキング、環境ポケモン、採用傾向、使用率、上位ポケモンの詳細データを参照する。ユーザーが流行、環境、ランキング、採用技、特性、持ち物、性格、能力ポイント、対戦環境の相談をしたときに使う。
 ---
 
