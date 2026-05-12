@@ -1,0 +1,10 @@
+name: ハッサム
+calc_as: メガハッサム
+also_calc_base: true
+nature: いじっぱり
+ability: テクニシャン
+item: ハッサムナイト
+evs:
+  H: 32
+  A: 32
+  B: 2
