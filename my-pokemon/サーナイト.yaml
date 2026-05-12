@@ -1,0 +1,9 @@
+name: サーナイト
+calc_as: メガサーナイト
+nature: ひかえめ
+ability: トレース
+item: サーナイトナイト
+evs:
+  H: 26
+  C: 27
+  S: 13
