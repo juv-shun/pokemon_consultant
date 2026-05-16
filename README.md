@@ -14,6 +14,13 @@
 ①については、Supabase のデータベースを採用し、Supabase上で管理している。したがって、Supabase MCPを使って、各種データを参照する。
 ②については、 `battle-data` スキルにて管理している。なぜなら、ポケモンの情報は様々な検索用途があるが、トレンド情報については、「対象ポケモン」で検索することがほとんどだからだ。
 
+## スキル運用
+
+- `.claude/skills/` をスキルのマスター置き場とする。
+- `.agents/skills/` 配下には、対応する `.claude/skills/` へのシンボリックリンクのみを置く。
+- スキルの追加・更新・データ更新は `.claude/skills/` 側に対して行い、`.agents/skills/` 側の実体ファイルは直接編集しない。
+- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、`.claude/skills/battle-data/references/` を更新する。
+
 ## 今後のTODOメモ
 
 - 環境ポケモンたちの主観的考察をスキルとして用意する。

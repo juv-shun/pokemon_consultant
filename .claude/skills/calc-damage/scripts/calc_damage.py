@@ -48,10 +48,9 @@ def calc_final_damage(
     Returns:
         (最小ダメージ, 最大ダメージ) のタプル
     """
-    combined = 1.0
+    modified = base_damage
     for mod in modifiers:
-        combined *= mod
-    modified = math.floor(base_damage * combined)
+        modified = math.floor(modified * mod)
 
     damages = [max(1, math.floor(modified * r)) for r in RANDOM_FACTORS]
     return min(damages), max(damages)
