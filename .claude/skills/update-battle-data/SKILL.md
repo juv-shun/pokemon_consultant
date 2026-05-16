@@ -1,6 +1,6 @@
 ---
 name: update-battle-data
-description: Pokemon Champions のバトルデータを最新シーズンに更新する。champs.pokedb.tokyo のシーズン選択と日付情報から実行日に対応するシーズンを判定し、battle-data スキルの ranking.md と上位50匹の詳細Markdownを再生成したいときに使う。
+description: Pokemon Champions のバトルデータを最新シーズンに更新し、検証してコミットまで行う。champs.pokedb.tokyo のシーズン選択と日付情報から実行日に対応するシーズンを判定し、battle-data スキルの ranking.md と上位50匹の詳細Markdownを再生成したいときに使う。
 ---
 
 # Battle Data Updater
@@ -23,6 +23,9 @@ Pokemon Champions の統計ページから、`battle-data` スキルの参照デ
    - `ranking.md` の対象シーズン、期間、更新日、ソースURL
    - `pokemon/` 配下の Markdown が50件であること
    - `rg -n "season=1|シーズンM-1" .claude/skills/battle-data/references` などで旧対象が残っていないこと
+5. 検証が通り、差分がバトルデータ更新に限定されていることを確認したら、`.claude/skills/battle-data/references/` と symlink 経由で見える `.agents/skills/battle-data` の差分をまとめてコミットする。
+6. コミットメッセージは日本語で、対象シーズンが分かるようにする。例: `バトルデータをシーズンM-3に更新`
+7. push はユーザーから明示的な指示がある場合だけ行う。
 
 ## 実行例
 
@@ -43,3 +46,4 @@ python .claude/skills/update-battle-data/scripts/update_battle_data.py --dry-run
 - ルールは既定で `1`（ダブルバトル）。
 - サイト構造が変わってスクリプトが失敗した場合は、一時修正ではなくHTML構造の変更点を確認してパーサを更新する。
 - 更新結果はデータファイルなので、通常のテストではなく件数・メタ情報・差分の確認を重視する。
+- このスキルでバトルデータ更新を依頼された場合は、ユーザーから別途停止指示がない限りコミットまで実施する。
