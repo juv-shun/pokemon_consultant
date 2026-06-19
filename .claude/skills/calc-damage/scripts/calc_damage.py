@@ -132,9 +132,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--item",
-        choices=["type-boost"],
+        choices=["type-boost", "life-orb"],
         default=None,
-        help="持ち物 (type-boost=タイプ強化アイテム×1.2)",
+        help="持ち物 (type-boost=タイプ強化アイテム×1.2, life-orb=いのちのたま×1.3)",
     )
     parser.add_argument(
         "--other", type=float, default=1.0, help="その他の補正倍率 (デフォルト: 1.0)"
@@ -184,6 +184,10 @@ def main() -> None:
     if args.item == "type-boost":
         modifiers.append(1.2)
         modifier_labels.append("タイプ強化アイテム×1.2")
+
+    if args.item == "life-orb":
+        modifiers.append(1.3)
+        modifier_labels.append("いのちのたま×1.3")
 
     if args.other != 1.0:
         modifiers.append(args.other)
