@@ -16,7 +16,7 @@
 
 - MCP サーバーからの検索を想定し、特定の技を覚えるポケモンや素早さなどの種族値条件を高速に判定できること。
 - **バージョン管理**: D1 にはスキーマ機能が無いため、将来ゲームのバージョンが変わる場合はバージョンごとに別の D1 データベースを作って分離する。現在は Champions 用の `pokemon-master` のみ。
-- スキーマ定義は `cloudflare/migrations/` で管理する（Supabase 時代の `supabase/migrations/` の `champions` スキーマ最終形を移植したもの）。
+- スキーマ定義は `cloudflare/migrations/` で管理する（Supabase 時代の `champions` スキーマ最終形を移植したもの。旧 `supabase/` ディレクトリは Supabase 廃止に伴い削除済みで、git 履歴から参照できる）。
 
 ## 3. モデリング方針
 

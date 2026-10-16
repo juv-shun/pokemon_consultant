@@ -13,3 +13,4 @@ Supabase（PokemonDB プロジェクト）の `champions` スキーマ5テーブ
 - CSV は1行目がヘッダー、NULL は空欄、真偽値は `true` / `false`。
 - `data.sql` は全テーブルの INSERT 文。スキーマ名なし、真偽値は `1` / `0` で、D1 (SQLite) にそのまま流せる。外部キーの依存順（pokemon → abilities → moves → 中間テーブル）に並んでいる。
 - 書き出し後、件数・文字数合計・`pokemon_moves` の MD5 を Supabase 側と照合済み。
+- Supabase 廃止後は、これが旧 Supabase データの最終バックアップとなる。
