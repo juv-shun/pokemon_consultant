@@ -27,7 +27,7 @@ npm run smoke              # 別ターミナルで。MCP クライアントと�
 ## デプロイ
 
 ```sh
-npx wrangler d1 create pokemon-master          # 発行された database_id を wrangler.jsonc に書く
+npx wrangler login                             # 初回のみ。本番 D1 は作成済み（wrangler.jsonc に database_id 記入済み）
 npm run db:migrate:remote
 npm run db:seed:remote
 npx wrangler secret put MCP_AUTH_TOKEN         # 任意。設定すると Bearer トークン必須になる

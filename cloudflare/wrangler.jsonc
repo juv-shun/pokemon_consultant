@@ -8,8 +8,7 @@
     {
       "binding": "DB",
       "database_name": "pokemon-master",
-      // `wrangler d1 create pokemon-master` で発行された ID に置き換える（ローカル実行には不要）
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "1033c58d-6cfb-4829-bb23-71183176a90e",
       "migrations_dir": "migrations"
     }
   ]
