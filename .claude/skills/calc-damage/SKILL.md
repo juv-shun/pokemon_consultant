@@ -27,20 +27,20 @@ description: ダメージ計算をしたい場合に使用する。
 
 ### 2. DB参照
 
-Supabase MCPを使って必要なデータを取得する。
+MCP サーバ `pokemon-master` の `query` ツールで必要なデータを取得する（テーブル定義は `describe_schema` で確認できる）。
 
 ```sql
 -- 攻撃側ポケモンの種族値・タイプ
 SELECT name_ja, type_primary, type_secondary, base_atk, base_spa, base_spe
-FROM champions.pokemon WHERE name_ja = '攻撃ポケモン名';
+FROM pokemon WHERE name_ja = '攻撃ポケモン名';
 
 -- 防御側ポケモンの種族値・タイプ
 SELECT name_ja, type_primary, type_secondary, base_hp, base_def, base_spd
-FROM champions.pokemon WHERE name_ja = '防御ポケモン名';
+FROM pokemon WHERE name_ja = '防御ポケモン名';
 
 -- 技の情報
 SELECT name_ja, type_name, damage_class, power, accuracy
-FROM champions.moves WHERE name_ja = '技名';
+FROM moves WHERE name_ja = '技名';
 ```
 
 ### 3. ステータス実数値の算出

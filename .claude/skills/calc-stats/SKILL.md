@@ -24,11 +24,11 @@ description: 各ポケモンのステータス実数値を計算したいとき�
 
 ### 2. DB参照
 
-Supabase MCPを使って種族値を取得する。
+MCP サーバ `pokemon-master` の `query` ツールで種族値を取得する。
 
 ```sql
 SELECT name_ja, base_hp, base_atk, base_def, base_spa, base_spd, base_spe
-FROM champions.pokemon WHERE name_ja = 'ポケモン名';
+FROM pokemon WHERE name_ja = 'ポケモン名';
 ```
 
 ### 3. 計算式
