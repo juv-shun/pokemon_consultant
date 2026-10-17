@@ -180,13 +180,10 @@ def parse_moves(detail_html: str) -> list[list[str]]:
     """Parse move usage rows from detail page HTML."""
 
     rows: list[list[str]] = []
-    pattern = re.compile(
-        r'pokemon-trend__move-item[\s\S]*?'
-        r'pokemon-trend__move-name">([\s\S]*?)</span>[\s\S]*?'
-        r'pokemon-trend__move-rate[^>]*>\s*([0-9.]+)\s*<small>%</small>'
-    )
+    pattern = re.compile(r'class="pokemon-trend__move-name"\s+data-move-detail="([^"]*)"')
     for match in pattern.finditer(detail_html):
-        rows.append([clean_text(match.group(1)), f"{match.group(2)}%"])
+        move = json.loads(html.unescape(match.group(1)))
+        rows.append([str(move["name"]), f"{move['rate']}%"])
     return rows
 
 
@@ -401,6 +398,16 @@ def update_battle_data(args: argparse.Namespace) -> None:
         missing = [category for category, count in counts.items() if count == 0]
         if missing:
             print(f"warning: {name} has no rows for {', '.join(missing)}", file=sys.stderr)
+    # 全ポケモンで 0 件のカテゴリはサイトの HTML 構造が変わったとみなし、壊れたデータを投入しない。
+    empty = [
+        category
+        for category in CATEGORIES
+        if not any(usage.category == category for usages in details.values() for usage in usages)
+    ]
+    if empty:
+        raise RuntimeError(
+            f"no rows for {', '.join(empty)} in any detail page; the site HTML has probably changed"
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
