@@ -398,6 +398,16 @@ def update_battle_data(args: argparse.Namespace) -> None:
         missing = [category for category, count in counts.items() if count == 0]
         if missing:
             print(f"warning: {name} has no rows for {', '.join(missing)}", file=sys.stderr)
+    # 全ポケモンで 0 件のカテゴリはサイトの HTML 構造が変わったとみなし、壊れたデータを投入しない。
+    empty = [
+        category
+        for category in CATEGORIES
+        if not any(usage.category == category for usages in details.values() for usage in usages)
+    ]
+    if empty:
+        raise RuntimeError(
+            f"no rows for {', '.join(empty)} in any detail page; the site HTML has probably changed"
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
