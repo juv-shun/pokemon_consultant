@@ -26,6 +26,7 @@ export const TABLE_DESCRIPTIONS: Record<string, { description: string; columns: 
       base_spd: "種族値 特防 (D)",
       base_spe: "種族値 素早さ (S)",
       remarks: "備考",
+      image_url: "画像URL（PokeAPI sprites の公式アートワーク PNG、475x475）。ポケモンを紹介するときに Markdown の画像として貼れる",
     },
   },
   abilities: {

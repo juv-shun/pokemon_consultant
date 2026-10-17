@@ -14,3 +14,4 @@ Supabase（PokemonDB プロジェクト）の `champions` スキーマ5テーブ
 - `data.sql` は全テーブルの INSERT 文。スキーマ名なし、真偽値は `1` / `0` で、D1 (SQLite) にそのまま流せる。外部キーの依存順（pokemon → abilities → moves → 中間テーブル）に並んでいる。
 - 書き出し後、件数・文字数合計・`pokemon_moves` の MD5 を Supabase 側と照合済み。
 - Supabase 廃止後は、これが旧 Supabase データの最終バックアップとなる。
+- `pokemon.image_url` は書き出し後に追加した列（2026-10-17、PokeAPI sprites の公式アートワーク URL）。既存 D1 へは `cloudflare/migrations/0003_pokemon_image_url.sql` で反映する。
