@@ -1,1 +1,0 @@
-/Users/shun.fukusumi/Programs/src/github.com/juv-shun/pokemon_consultant/.claude/skills/champions-trend/references/ranking.md

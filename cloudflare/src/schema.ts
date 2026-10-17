@@ -116,6 +116,10 @@ export const QUERY_TIPS = `- SQLite（Cloudflare D1）です。スキーマ名�
 - 特性・技は pokemon_abilities / pokemon_moves を JOIN します。
 - 地面技を無効にできるのはひこうタイプと特性「ふゆう」持ちの両方です。
 - 対戦環境（流行・使用率）は battle_* テーブルです。battle_rankings.pokemon_id で pokemon と JOIN します。採用率の詳細は has_detail = 1 のポケモンだけにあります。
+- battle_* は最新シーズン・ルールの1件分だけを保持します。回答では battle_seasons のシーズン名・ルール・更新日時を添えます。
+- battle_rankings / battle_usages の pokemon_name はサイト表記です。マスターの名前から探すときは pokemon_id で JOIN します。
+- has_detail = 0 のポケモンは採用傾向を断定せず、順位だけを根拠にします。使用率が無い項目を推測で補いません。
+- stat_spread（能力ポイント配分）はサイトが合算した代表行だけで、内訳はありません。
 
 例: 素早さ種族値100以上で特性「いかく」を持つポケモン
 \`\`\`sql

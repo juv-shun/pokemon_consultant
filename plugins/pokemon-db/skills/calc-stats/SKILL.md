@@ -18,9 +18,8 @@ description: 各ポケモンのステータス実数値を計算したいとき�
 
 **性格・努力値が指定されていない場合**、以下の優先度で参照する（ユーザーに確認しない）。
 
-1. **my-pokemon を参照**: `my-pokemon/ポケモン名.yaml` を Read ツールで読み込む。ファイルが存在すれば、そのデータを使用し「（my-pokemon 参照）」と明示する。型を指定している場合（例: 「スカーフガブリアス」）は `my-pokemon/ガブリアス_スカーフ.yaml` も探す。`calc_as` フィールドがある場合は、そのポケモン名の種族値を使ってステータス計算する（例: `calc_as: メガサーナイト` ならメガサーナイトの種族値を DB から取得する）。`also_calc_base: true` が併記されている場合は、`name`（メガ前）と `calc_as`（メガ後）の両方でステータス計算し、それぞれ結果を並べて示す。
-2. **battle-data を参照**: my-pokemon にファイルがなければ `battle-data` スキルを使い、代表的な性格・努力値を使用する。使用した値は「（battle-data 参照）」と明示する。
-3. **ユーザーへの確認**: battle-data にも詳細データがない場合のみ確認する。
+1. **環境データを参照**: MCP サーバ `pokemon-master` の `battle_usages` テーブルから、そのポケモンの採用率1位の性格（`category = 'nature'`）と能力ポイント配分（`category = 'stat_spread'`）を使う。使用した値は「（環境データ参照）」と明示する。
+2. **ユーザーへの確認**: 環境データに詳細がない（`battle_rankings.has_detail = 0` または未掲載）場合のみ確認する。
 
 ### 2. DB参照
 
@@ -77,10 +76,10 @@ FROM pokemon WHERE name_ja = 'ポケモン名';
 `calc_stats.py` を使って実数値を算出する。
 
 ```bash
-python .Codex/skills/calc-stats/scripts/calc_stats.py --base 種族値 --ev 努力値                  # HP以外(補正なし)
-python .Codex/skills/calc-stats/scripts/calc_stats.py --base 種族値 --ev 努力値 --nature up      # 性格補正↑(×1.1)
-python .Codex/skills/calc-stats/scripts/calc_stats.py --base 種族値 --ev 努力値 --nature down    # 性格補正↓(×0.9)
-python .Codex/skills/calc-stats/scripts/calc_stats.py --base 種族値 --ev 努力値 --hp             # HP
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/calc-stats/scripts/calc_stats.py" --base 種族値 --ev 努力値                  # HP以外(補正なし)
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/calc-stats/scripts/calc_stats.py" --base 種族値 --ev 努力値 --nature up      # 性格補正↑(×1.1)
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/calc-stats/scripts/calc_stats.py" --base 種族値 --ev 努力値 --nature down    # 性格補正↓(×0.9)
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/calc-stats/scripts/calc_stats.py" --base 種族値 --ev 努力値 --hp             # HP
 ```
 
 ### 6. 結果の回答
