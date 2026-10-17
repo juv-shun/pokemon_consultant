@@ -12,14 +12,14 @@
 - ② ポケモンチャンピオンズで使われている統計情報
 
 ①については、Cloudflare D1 のデータベースで管理している。Cloudflare Workers 上の MCP サーバ（`cloudflare/`、MCP サーバ名 `pokemon-master`）の `describe_schema` ツールでテーブル定義を確認し、`query` ツールで読み取り専用の SQL を実行して各種データを参照する。
-②については、 `battle-data` スキルにて管理している。なぜなら、ポケモンの情報は様々な検索用途があるが、トレンド情報については、「対象ポケモン」で検索することがほとんどだからだ。
+②も同じ D1 データベースの `battle_seasons` / `battle_rankings` / `battle_usages` テーブルで管理しており、`pokemon_id` で①のテーブルと JOIN できる。参照方法は `battle-data` スキルにまとめてある。
 
 ## スキル運用
 
 - `.claude/skills/` をスキルのマスター置き場とする。
 - `.agents/skills/` 配下には、対応する `.claude/skills/` へのシンボリックリンクのみを置く。
 - スキルの追加・更新・データ更新は `.claude/skills/` 側に対して行い、`.agents/skills/` 側の実体ファイルは直接編集しない。
-- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、`.claude/skills/battle-data/references/` を更新する。
+- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、サイトから取得したデータを D1 に直接投入する。データの中身は日々変わるためリポジトリでは管理しない。
 
 ## 今後のTODOメモ
 

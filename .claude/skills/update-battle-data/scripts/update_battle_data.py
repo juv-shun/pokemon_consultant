@@ -1,11 +1,13 @@
-"""Update Pokemon Champions battle-data references from champs.pokedb.tokyo."""
+"""Fetch Pokemon Champions battle data from champs.pokedb.tokyo and write SQL for the D1 battle_* tables."""
 
 from __future__ import annotations
 
 import argparse
 import datetime as dt
 import html
+import json
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -17,6 +19,10 @@ from typing import Sequence
 BASE_URL = "https://champs.pokedb.tokyo"
 DEFAULT_RULE = 1
 DETAIL_LIMIT = 50
+D1_DATABASE = "pokemon-master"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+CLOUDFLARE_DIR = REPO_ROOT / "cloudflare"
+CATEGORIES = ("move", "ability", "item", "nature", "stat_spread")
 
 
 @dataclass(frozen=True)
@@ -155,20 +161,6 @@ def parse_ranking(list_html: str, season: int, rule: int) -> list[RankingRow]:
     return rows
 
 
-def markdown_table(rows: Sequence[Sequence[str]], headers: Sequence[str]) -> str:
-    """Build a Markdown table."""
-
-    aligns = ["---:" if index == 0 and headers[0] == "順位" else "---" for index in range(len(headers))]
-    if headers[-1] == "使用率":
-        aligns[-1] = "---:"
-    lines = [
-        f"| {' | '.join(headers)} |",
-        f"| {' | '.join(aligns)} |",
-    ]
-    lines.extend(f"| {' | '.join(row)} |" for row in rows)
-    return "\n".join(lines)
-
-
 def parse_usage_arrays(detail_html: str) -> dict[str, list[dict[str, object]]]:
     """Parse Alpine usagePieChart data arrays."""
 
@@ -180,9 +172,6 @@ def parse_usage_arrays(detail_html: str) -> dict[str, list[dict[str, object]]]:
     for match in pattern.finditer(detail_html):
         key = match.group(1)
         json_like = html.unescape(match.group(2))
-        # The embedded payload is JSON, but use the standard library parser lazily.
-        import json
-
         result[key] = json.loads(json_like)
     return result
 
@@ -236,83 +225,149 @@ def parse_stat_spreads(detail_html: str) -> list[list[str]]:
     return rows
 
 
-def usage_rows(items: Sequence[dict[str, object]], name_key: str) -> list[list[str]]:
-    """Convert usagePieChart items to Markdown table rows."""
+@dataclass(frozen=True)
+class UsageRow:
+    """One usage row of a Pokemon detail page."""
 
-    rows: list[list[str]] = []
-    for item in items:
-        name = str(item.get(name_key, ""))
-        decoration = clean_text(str(item.get("decoration", "")))
-        display_name = f"{name} {decoration}".strip()
-        rate = float(item.get("rate", 0.0))
-        rows.append([str(item.get("rank", "")), display_name, f"{rate:.1f}%"])
+    category: str
+    rank: int
+    name: str
+    detail: str | None
+    rate: float
+
+
+# サイト表記とポケモンマスター (pokemon.name_ja) の表記が機械的に揃わないもの。
+MASTER_NAME_OVERRIDES = {
+    "フラエッテ:永遠": "フラエッテ(えいえん)",
+    "ギルガルド": "ギルガルド(シールド)",
+    "イルカマン": "イルカマン(マイティ)",
+    "ケンタロス:格": "ケンタロス(パルデア単)",
+    "ケンタロス:炎": "ケンタロス(パルデア炎)",
+    "ケンタロス:水": "ケンタロス(パルデア水)",
+    "イキリンコ (グリーン)": "イキリンコ",
+    "イキリンコ (イエロー)": "イキリンコ",
+    "パンプジン (こだま)": "パンプジン(小)",
+    "パンプジン (ちゅうだま)": "パンプジン(普通)",
+    "パンプジン (おおだま)": "パンプジン(大)",
+    "パンプジン (ギガだま)": "パンプジン(特大)",
+}
+
+
+def to_master_name(name: str) -> str:
+    """Convert a site Pokemon name to pokemon.name_ja of the master database."""
+
+    if name in MASTER_NAME_OVERRIDES:
+        return MASTER_NAME_OVERRIDES[name]
+    name = name.replace(" (オス)", "♂").replace(" (メス)", "♀")
+    return re.sub(r" \((.+)\)$", r"(\1)", name)
+
+
+def parse_rate(value: str) -> float:
+    """Parse a usage rate such as '44.4%'."""
+
+    return float(value.strip().rstrip("%"))
+
+
+def parse_detail(detail_html: str) -> list[UsageRow]:
+    """Parse all usage rows from detail page HTML."""
+
+    rows = [
+        UsageRow("move", index, name, None, parse_rate(rate))
+        for index, (name, rate) in enumerate(parse_moves(detail_html), start=1)
+    ]
+    usage = parse_usage_arrays(detail_html)
+    for key, category in (("abilities", "ability"), ("items", "item"), ("personalities", "nature")):
+        for index, item in enumerate(usage.get(key, []), start=1):
+            decoration = clean_text(str(item.get("decoration", ""))).strip("() ")
+            rows.append(
+                UsageRow(
+                    category,
+                    int(item.get("rank") or index),
+                    str(item.get("name", "")),
+                    decoration or None,
+                    round(float(item.get("rate", 0.0)), 1),
+                )
+            )
+    rows.extend(
+        UsageRow("stat_spread", int(rank), spread, None, parse_rate(rate))
+        for rank, spread, rate in parse_stat_spreads(detail_html)
+    )
     return rows
 
 
-def build_ranking_markdown(
+def sql_literal(value: object) -> str:
+    """Render a Python value as a SQLite literal."""
+
+    if value is None:
+        return "NULL"
+    if isinstance(value, (int, float)):
+        return repr(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def sql_datetime(value: str) -> str:
+    """Convert 'YYYY/M/D H:MM' to 'YYYY-MM-DD HH:MM'."""
+
+    return dt.datetime.strptime(value, "%Y/%m/%d %H:%M").strftime("%Y-%m-%d %H:%M")
+
+
+def build_sql(
     *,
     season: Season,
+    rule: int,
     rule_name: str,
     update_time: str,
     source_url: str,
     ranking: Sequence[RankingRow],
+    details: dict[str, list[UsageRow]],
 ) -> str:
-    """Build ranking.md content."""
+    """Build SQL that replaces the battle_* tables with the given snapshot."""
 
-    rows = [[str(row.rank), row.name] for row in ranking]
-    return (
-        "# Pokemon Champions 流行ランキング\n\n"
-        f"対象: {season.label} / {rule_name}\n"
-        f"期間: {season.period}\n"
-        f"更新日: {update_time}\n"
-        f"ソース: {source_url}\n"
-        f"ランキング件数: {len(ranking)}件\n"
-        f"詳細データ対象: 上位{DETAIL_LIMIT}匹\n\n"
-        f"{markdown_table(rows, ['順位', 'ポケモン'])}\n"
-    )
-
-
-def build_detail_markdown(
-    *,
-    pokemon: RankingRow,
-    season: Season,
-    rule_name: str,
-    update_time: str,
-    detail_html: str,
-) -> str:
-    """Build a Pokemon detail Markdown file."""
-
-    usage = parse_usage_arrays(detail_html)
-    source_url = f"{BASE_URL}{pokemon.href}"
-    return (
-        f"# {pokemon.name}\n\n"
-        f"対象: {season.label} / {rule_name}\n"
-        f"順位: {pokemon.rank}位\n"
-        f"更新日: {update_time}\n"
-        f"ソース: {source_url}\n\n"
-        "## 技\n\n"
-        f"{markdown_table(parse_moves(detail_html), ['技', '使用率'])}\n\n"
-        "## 特性\n\n"
-        f"{markdown_table(usage_rows(usage.get('abilities', []), 'name'), ['順位', '特性', '使用率'])}\n\n"
-        "## 持ち物\n\n"
-        f"{markdown_table(usage_rows(usage.get('items', []), 'name'), ['順位', '持ち物', '使用率'])}\n\n"
-        "## 性格\n\n"
-        f"{markdown_table(usage_rows(usage.get('personalities', []), 'name'), ['順位', '性格', '使用率'])}\n\n"
-        "## 能力ポイント\n\n"
-        f"{markdown_table(parse_stat_spreads(detail_html), ['順位', '配分', '使用率'])}\n\n"
-        "## メモ\n\n"
-        "- このファイルはランキング詳細ページから取得した表示データを記録する。\n"
-    )
-
-
-def safe_filename(name: str) -> str:
-    """Return a filesystem-safe Markdown filename."""
-
-    return name.replace("/", ":") + ".md"
+    key = f"{season.value}, {rule}"
+    lines = [
+        "-- Pokemon Champions 統計データ（update-battle-data スキルが生成。手で編集しない）",
+        f"-- 対象: {season.label} / {rule_name}  期間: {season.period}  更新日: {update_time}",
+        "-- 過去分は保持しないため、既存データを消してから入れ直す。",
+        "DELETE FROM battle_usages;",
+        "DELETE FROM battle_rankings;",
+        "DELETE FROM battle_seasons;",
+        "",
+        "INSERT INTO battle_seasons (season, rule, season_label, rule_name, period_start, period_end, updated_at, source_url) VALUES",
+        f"({key}, {sql_literal(season.label)}, {sql_literal(rule_name)}, "
+        f"{sql_literal(season.start_date.isoformat())}, {sql_literal(season.end_date.isoformat())}, "
+        f"{sql_literal(sql_datetime(update_time))}, {sql_literal(source_url)});",
+        "",
+    ]
+    ranking_values = [
+        f"({key}, {row.rank}, {sql_literal(row.name)}, "
+        f"(SELECT id FROM pokemon WHERE name_ja = {sql_literal(to_master_name(row.name))}), "
+        f"{1 if row.name in details else 0}, {sql_literal(BASE_URL + row.href if row.href else None)})"
+        for row in ranking
+    ]
+    for start in range(0, len(ranking_values), 100):
+        lines.append("INSERT INTO battle_rankings (season, rule, rank, pokemon_name, pokemon_id, has_detail, source_url) VALUES")
+        lines.append(",\n".join(ranking_values[start : start + 100]) + ";")
+        lines.append("")
+    for row in ranking:
+        usages = details.get(row.name)
+        if not usages:
+            continue
+        lines.append(f"-- {row.rank}位 {row.name}")
+        lines.append("INSERT INTO battle_usages (season, rule, pokemon_name, category, rank, name, detail, rate) VALUES")
+        lines.append(
+            ",\n".join(
+                f"({key}, {sql_literal(row.name)}, {sql_literal(usage.category)}, {usage.rank}, "
+                f"{sql_literal(usage.name)}, {sql_literal(usage.detail)}, {usage.rate!r})"
+                for usage in usages
+            )
+            + ";"
+        )
+        lines.append("")
+    return "\n".join(lines)
 
 
 def update_battle_data(args: argparse.Namespace) -> None:
-    """Update battle-data reference files."""
+    """Fetch the latest battle data and write it as SQL for the battle_* tables."""
 
     today = args.today or dt.date.today()
     initial_url = f"{BASE_URL}/pokemon/list?rule={args.rule}&q="
@@ -328,9 +383,6 @@ def update_battle_data(args: argparse.Namespace) -> None:
     ranking = parse_ranking(list_html, season.value, args.rule)
     rule_name = "ダブルバトル" if args.rule == 1 else "シングルバトル"
 
-    output_root = args.output
-    pokemon_dir = output_root / "pokemon"
-
     print(f"season={season.value} {season.label}")
     print(f"period={season.period}")
     print(f"updated_at={update_time}")
@@ -340,34 +392,58 @@ def update_battle_data(args: argparse.Namespace) -> None:
     if args.dry_run:
         return
 
-    output_root.mkdir(parents=True, exist_ok=True)
-    pokemon_dir.mkdir(parents=True, exist_ok=True)
-    (output_root / "ranking.md").write_text(
-        build_ranking_markdown(
+    details = {
+        pokemon.name: parse_detail(fetch_text(f"{BASE_URL}{pokemon.href}"))
+        for pokemon in ranking[:DETAIL_LIMIT]
+    }
+    for name, usages in details.items():
+        counts = {category: sum(1 for usage in usages if usage.category == category) for category in CATEGORIES}
+        missing = [category for category, count in counts.items() if count == 0]
+        if missing:
+            print(f"warning: {name} has no rows for {', '.join(missing)}", file=sys.stderr)
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        build_sql(
             season=season,
+            rule=args.rule,
             rule_name=rule_name,
             update_time=update_time,
             source_url=list_url,
             ranking=ranking,
+            details=details,
         ),
         encoding="utf-8",
     )
+    print(f"wrote {args.output}")
 
-    for old_file in pokemon_dir.glob("*.md"):
-        old_file.unlink()
+    if args.apply:
+        apply_to_d1(args.output, args.apply)
 
-    for pokemon in ranking[:DETAIL_LIMIT]:
-        detail_html = fetch_text(f"{BASE_URL}{pokemon.href}")
-        (pokemon_dir / safe_filename(pokemon.name)).write_text(
-            build_detail_markdown(
-                pokemon=pokemon,
-                season=season,
-                rule_name=rule_name,
-                update_time=update_time,
-                detail_html=detail_html,
-            ),
-            encoding="utf-8",
-        )
+
+def apply_to_d1(sql_path: Path, target: str) -> None:
+    """Run the generated SQL against the D1 database with wrangler.
+
+    Args:
+        sql_path: Generated SQL file.
+        target: 'local' or 'remote'.
+
+    Raises:
+        RuntimeError: If wrangler fails.
+    """
+
+    command = [
+        "npx",
+        "wrangler",
+        "d1",
+        "execute",
+        D1_DATABASE,
+        f"--{target}",
+        f"--file={sql_path.resolve()}",
+    ]
+    print(f"running {' '.join(command)} (cwd={CLOUDFLARE_DIR})")
+    if subprocess.run(command, cwd=CLOUDFLARE_DIR, check=False).returncode != 0:
+        raise RuntimeError(f"wrangler d1 execute --{target} failed")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -379,8 +455,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(".claude/skills/battle-data/references"),
-        help="Output references directory.",
+        default=REPO_ROOT / "data/battle/battle_data.sql",
+        help="Output SQL file for the battle_* tables of the D1 database (git-ignored).",
+    )
+    parser.add_argument(
+        "--apply",
+        choices=("local", "remote"),
+        help="Also run the generated SQL against the local or remote D1 database with wrangler.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Fetch and print detected metadata without writing files.")
     parser.add_argument(

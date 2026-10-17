@@ -1,6 +1,6 @@
 # pokemon-master MCP サーバ（Cloudflare Workers + D1）
 
-ポケモンマスターデータ（ポケモン・特性・技）を D1 に置き、読み取り専用の MCP サーバとして公開する。
+ポケモンマスターデータ（ポケモン・特性・技）と Pokemon Champions の統計情報（`battle_*` テーブル）を D1 に置き、読み取り専用の MCP サーバとして公開する。
 
 ## ツール
 
@@ -18,6 +18,7 @@ cd cloudflare
 npm install
 npm run db:migrate:local   # スキーマ作成
 npm run db:seed:local      # ../data/champions/data.sql を投入
+python ../.claude/skills/update-battle-data/scripts/update_battle_data.py --apply local  # 統計情報をサイトから取得して投入
 npm run dev                # http://localhost:8787/mcp
 npm run smoke              # 別ターミナルで。MCP クライアントとしてツールを呼んで確認
 ```

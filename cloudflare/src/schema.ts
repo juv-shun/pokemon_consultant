@@ -69,6 +69,44 @@ export const TABLE_DESCRIPTIONS: Record<string, { description: string; columns: 
       move_id: "moves.id",
     },
   },
+  battle_seasons: {
+    description: "Pokemon Champions 統計情報の対象シーズン・ルール。最新の1件だけを保持する。",
+    columns: {
+      season: "サイト上のシーズン番号",
+      rule: "サイト上のルール番号（1 = ダブルバトル）",
+      season_label: "シーズン名（例: 'シーズンM-6 (M-C)'）",
+      rule_name: "ルール名（例: 'ダブルバトル'）",
+      period_start: "期間の開始日 'YYYY-MM-DD'",
+      period_end: "期間の終了日 'YYYY-MM-DD'",
+      updated_at: "統計の更新日時 'YYYY-MM-DD HH:MM'",
+      source_url: "ランキングページの URL",
+    },
+  },
+  battle_rankings: {
+    description: "Pokemon Champions の使用率ランキング（全件）。",
+    columns: {
+      season: "battle_seasons.season",
+      rule: "battle_seasons.rule",
+      rank: "使用率順位（1 始まり）",
+      pokemon_name: "サイト表記のポケモン名（例: 'イエッサン (メス)', 'ウインディ (ヒスイ)'）。pokemon.name_ja とは表記が違うことがある",
+      pokemon_id: "pokemon.id。マスターと JOIN するときはこちらを使う",
+      has_detail: "battle_usages に詳細（上位50匹）があれば 1",
+      source_url: "詳細ページの URL（詳細なしは NULL）",
+    },
+  },
+  battle_usages: {
+    description: "ランキング上位ポケモンの採用率（技・特性・持ち物・性格・能力ポイント）。",
+    columns: {
+      season: "battle_seasons.season",
+      rule: "battle_seasons.rule",
+      pokemon_name: "battle_rankings.pokemon_name",
+      category: "'move'（技） / 'ability'（特性） / 'item'（持ち物） / 'nature'（性格） / 'stat_spread'（能力ポイント配分）",
+      rank: "カテゴリ内の順位（1 始まり）",
+      name: "技名・特性名・持ち物名・性格名、または能力ポイント配分（例: 'A32, S32, +余り'）",
+      detail: "補足。性格なら上昇下降（例: 'C↑A↓'）",
+      rate: "使用率（%、例: 44.4）",
+    },
+  },
 };
 
 export const QUERY_TIPS = `- SQLite（Cloudflare D1）です。スキーマ名は無いので \`champions.pokemon\` ではなく \`pokemon\` と書きます。
@@ -77,6 +115,7 @@ export const QUERY_TIPS = `- SQLite（Cloudflare D1）です。スキーマ名�
 - タイプ名: ノーマル, ほのお, みず, でんき, くさ, こおり, かくとう, どく, じめん, ひこう, エスパー, むし, いわ, ゴースト, ドラゴン, あく, はがね, フェアリー
 - 特性・技は pokemon_abilities / pokemon_moves を JOIN します。
 - 地面技を無効にできるのはひこうタイプと特性「ふゆう」持ちの両方です。
+- 対戦環境（流行・使用率）は battle_* テーブルです。battle_rankings.pokemon_id で pokemon と JOIN します。採用率の詳細は has_detail = 1 のポケモンだけにあります。
 
 例: 素早さ種族値100以上で特性「いかく」を持つポケモン
 \`\`\`sql
@@ -97,4 +136,13 @@ JOIN moves m ON m.id = pm.move_id
 WHERE m.name_ja IN ('ねこだまし', 'とんぼがえり')
 GROUP BY p.id
 HAVING COUNT(DISTINCT m.id) = 2;
+\`\`\`
+
+例: 使用率上位20匹のうち、持ち物1位が「きあいのタスキ」のポケモン
+\`\`\`sql
+SELECT r.rank, r.pokemon_name, u.rate
+FROM battle_rankings r
+JOIN battle_usages u ON u.season = r.season AND u.rule = r.rule AND u.pokemon_name = r.pokemon_name
+WHERE r.rank <= 20 AND u.category = 'item' AND u.rank = 1 AND u.name = 'きあいのタスキ'
+ORDER BY r.rank;
 \`\`\``;
