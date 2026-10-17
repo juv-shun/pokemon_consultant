@@ -6,7 +6,7 @@
 
 - `.claude-plugin/marketplace.json`: マーケットプレイス定義。プラグインは `plugins/` 配下を相対パスで参照する。
 - `plugins/pokemon-db/`: 配布するプラグイン。MCP サーバの登録（`.mcp.json`）とスキル（`skills/`）を持つ。
-- `cloudflare/`: MCP サーバ `pokemon-master` のソース（Cloudflare Workers + D1）。デプロイ方法は `cloudflare/README.md`。
+- `cloudflare/`: MCP サーバ `pokemon-db` のソース（Cloudflare Workers + D1）。D1 のデータベース名は旧名の `pokemon-master` のまま。デプロイ方法は `cloudflare/README.md`。
 - `data/champions/`: D1 マスターデータのシード。
 - `.claude/skills/update-battle-data/`: 使用率統計を D1 に投入する管理者用スキル。本番 D1 に書き込むためプラグインには含めない。
 

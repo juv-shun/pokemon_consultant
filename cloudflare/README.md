@@ -1,4 +1,4 @@
-# pokemon-master MCP サーバ（Cloudflare Workers + D1）
+# pokemon-db MCP サーバ（Cloudflare Workers + D1）
 
 ポケモンマスターデータ（ポケモン・特性・技）と Pokemon Champions の統計情報（`battle_*` テーブル）を D1 に置き、読み取り専用の MCP サーバとして公開する。
 
@@ -38,7 +38,7 @@ npm run deploy
 ## Claude Code から使う
 
 ```sh
-claude mcp add --transport http pokemon-master https://<worker のURL>/mcp \
+claude mcp add --transport http pokemon-db https://<worker のURL>/mcp \
   --header "Authorization: Bearer <MCP_AUTH_TOKEN>"
 ```
 

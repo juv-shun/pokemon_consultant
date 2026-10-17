@@ -6,7 +6,7 @@
 
 | 種類 | 名前 | 内容 |
 | --- | --- | --- |
-| MCP サーバ | `pokemon-master` | ポケモン・技・特性のマスターデータと使用率統計（D1）を読み取り専用 SQL で引く。ツールは `describe_schema` と `query` |
+| MCP サーバ | `pokemon-db` | ポケモン・技・特性のマスターデータと使用率統計（D1）を読み取り専用 SQL で引く。ツールは `describe_schema` と `query` |
 | スキル | `battle-basics` | 対戦ルール・育成・持ち物リスト・タイプ相性などの基礎知識 |
 | スキル | `calc-damage` | ダメージ計算 |
 | スキル | `calc-stats` | ステータス実数値の計算 |

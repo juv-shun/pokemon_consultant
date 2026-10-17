@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "pokemon-master": {
+    "pokemon-db": {
       "type": "http",
       "url": "https://pokemon-consultant.shun-fukusumi.workers.dev/mcp"
     }

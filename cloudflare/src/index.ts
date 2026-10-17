@@ -10,7 +10,7 @@ export interface Env {
 }
 
 function createServer(env: Env): McpServer {
-  const server = new McpServer({ name: "pokemon-master", version: "1.0.0" });
+  const server = new McpServer({ name: "pokemon-db", version: "1.0.0" });
 
   server.registerTool(
     "describe_schema",
@@ -69,7 +69,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/") {
-      return new Response("pokemon-master MCP server. Endpoint: /mcp\n");
+      return new Response("pokemon-db MCP server. Endpoint: /mcp\n");
     }
     if (url.pathname !== "/mcp") {
       return new Response("Not Found", { status: 404 });
