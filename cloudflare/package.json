@@ -10,7 +10,9 @@
     "db:migrate:local": "wrangler d1 migrations apply pokemon-master --local",
     "db:migrate:remote": "wrangler d1 migrations apply pokemon-master --remote",
     "db:seed:local": "wrangler d1 execute pokemon-master --local --file=../data/champions/data.sql",
-    "db:seed:remote": "wrangler d1 execute pokemon-master --remote --file=../data/champions/data.sql"
+    "db:seed:remote": "wrangler d1 execute pokemon-master --remote --file=../data/champions/data.sql",
+    "db:seed:battle:local": "wrangler d1 execute pokemon-master --local --file=../data/battle/battle_data.sql",
+    "db:seed:battle:remote": "wrangler d1 execute pokemon-master --remote --file=../data/battle/battle_data.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261016.1",

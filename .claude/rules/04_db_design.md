@@ -231,3 +231,13 @@ erDiagram
 | --- | --- | --- | --- |
 | `pokemon_moves_pkey` | `(pokemon_id, move_id)` | PK | 主キー（自動作成） |
 | `idx_pokemon_moves_move_id` | `(move_id, pokemon_id)` | B-tree | 特定技を覚えるポケモン検索（逆引き） |
+
+## 6. 対戦環境（統計情報）テーブル
+
+Pokemon Champions の使用率統計を保持する。定義は `cloudflare/migrations/0002_battle_data.sql`、データは `update-battle-data` スキルが生成する `data/battle/battle_data.sql`。最新シーズン・ルールのみを保持し、更新時は全件入れ替える。参照方法は `battle-data` スキルを参照。
+
+| テーブル | 主キー | 内容 |
+| --- | --- | --- |
+| `battle_seasons` | `(season, rule)` | 対象シーズン名・ルール名・期間・更新日時・ソースURL |
+| `battle_rankings` | `(season, rule, rank)` | ランキング全件。`pokemon_name`（サイト表記、`(season, rule)` 内で一意）、`pokemon_id`（FK→`pokemon.id`）、`has_detail`（詳細があれば `1`） |
+| `battle_usages` | `(season, rule, pokemon_name, category, rank)` | 上位50匹の採用率。`category` は `move` / `ability` / `item` / `nature` / `stat_spread`、`name`、`detail`（性格の上昇下降など）、`rate`（%） |

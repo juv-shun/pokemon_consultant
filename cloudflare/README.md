@@ -1,6 +1,6 @@
 # pokemon-master MCP サーバ（Cloudflare Workers + D1）
 
-ポケモンマスターデータ（ポケモン・特性・技）を D1 に置き、読み取り専用の MCP サーバとして公開する。
+ポケモンマスターデータ（ポケモン・特性・技）と Pokemon Champions の統計情報（`battle_*` テーブル）を D1 に置き、読み取り専用の MCP サーバとして公開する。
 
 ## ツール
 
@@ -18,6 +18,7 @@ cd cloudflare
 npm install
 npm run db:migrate:local   # スキーマ作成
 npm run db:seed:local      # ../data/champions/data.sql を投入
+npm run db:seed:battle:local  # ../data/battle/battle_data.sql（統計情報）を投入
 npm run dev                # http://localhost:8787/mcp
 npm run smoke              # 別ターミナルで。MCP クライアントとしてツールを呼んで確認
 ```
@@ -30,6 +31,7 @@ npm run smoke              # 別ターミナルで。MCP クライアントと�
 npx wrangler login                             # 初回のみ。本番 D1 は作成済み（wrangler.jsonc に database_id 記入済み）
 npm run db:migrate:remote
 npm run db:seed:remote
+npm run db:seed:battle:remote                  # 統計情報。update-battle-data で再生成したら毎回これだけ流し直す
 npx wrangler secret put MCP_AUTH_TOKEN         # 任意。設定すると Bearer トークン必須になる
 npm run deploy
 ```
