@@ -19,7 +19,7 @@
 - `.claude/skills/` をスキルのマスター置き場とする。
 - `.agents/skills/` 配下には、対応する `.claude/skills/` へのシンボリックリンクのみを置く。
 - スキルの追加・更新・データ更新は `.claude/skills/` 側に対して行い、`.agents/skills/` 側の実体ファイルは直接編集しない。
-- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、`data/battle/battle_data.sql` を再生成して D1 に投入する。
+- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、サイトから取得したデータを D1 に直接投入する。データの中身は日々変わるためリポジトリでは管理しない。
 
 ## 今後のTODOメモ
 

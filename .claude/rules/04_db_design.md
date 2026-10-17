@@ -234,7 +234,7 @@ erDiagram
 
 ## 6. 対戦環境（統計情報）テーブル
 
-Pokemon Champions の使用率統計を保持する。定義は `cloudflare/migrations/0002_battle_data.sql`、データは `update-battle-data` スキルが生成する `data/battle/battle_data.sql`。最新シーズン・ルールのみを保持し、更新時は全件入れ替える。参照方法は `battle-data` スキルを参照。
+Pokemon Champions の使用率統計を保持する。定義は `cloudflare/migrations/0002_battle_data.sql`、データは `update-battle-data` スキルがサイトから取得して直接投入する（日々変わるためリポジトリでは管理しない）。最新シーズン・ルールのみを保持し、更新時は全件入れ替える。参照方法は `battle-data` スキルを参照。
 
 | テーブル | 主キー | 内容 |
 | --- | --- | --- |

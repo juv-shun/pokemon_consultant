@@ -1,5 +1,5 @@
 -- Pokemon Champions の統計情報（旧 battle-data スキルの Markdown）を保持するテーブル。
--- データは update-battle-data スキルのスクリプトが生成する data/battle/battle_data.sql で投入する。
+-- データは update-battle-data スキルのスクリプトがサイトから取得して直接投入する（リポジトリでは管理しない）。
 -- 運用上は最新シーズン・ルールのみ保持するが、season / rule をキーに含めて複数を共存できる形にしておく。
 
 -- 1. battle_seasons: 取り込んだ統計の対象シーズン・ルールと更新日時

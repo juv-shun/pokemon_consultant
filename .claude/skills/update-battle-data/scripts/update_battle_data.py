@@ -7,6 +7,7 @@ import datetime as dt
 import html
 import json
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -18,6 +19,9 @@ from typing import Sequence
 BASE_URL = "https://champs.pokedb.tokyo"
 DEFAULT_RULE = 1
 DETAIL_LIMIT = 50
+D1_DATABASE = "pokemon-master"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+CLOUDFLARE_DIR = REPO_ROOT / "cloudflare"
 CATEGORIES = ("move", "ability", "item", "nature", "stat_spread")
 
 
@@ -413,6 +417,34 @@ def update_battle_data(args: argparse.Namespace) -> None:
     )
     print(f"wrote {args.output}")
 
+    if args.apply:
+        apply_to_d1(args.output, args.apply)
+
+
+def apply_to_d1(sql_path: Path, target: str) -> None:
+    """Run the generated SQL against the D1 database with wrangler.
+
+    Args:
+        sql_path: Generated SQL file.
+        target: 'local' or 'remote'.
+
+    Raises:
+        RuntimeError: If wrangler fails.
+    """
+
+    command = [
+        "npx",
+        "wrangler",
+        "d1",
+        "execute",
+        D1_DATABASE,
+        f"--{target}",
+        f"--file={sql_path.resolve()}",
+    ]
+    print(f"running {' '.join(command)} (cwd={CLOUDFLARE_DIR})")
+    if subprocess.run(command, cwd=CLOUDFLARE_DIR, check=False).returncode != 0:
+        raise RuntimeError(f"wrangler d1 execute --{target} failed")
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build CLI argument parser."""
@@ -423,8 +455,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data/battle/battle_data.sql"),
-        help="Output SQL file for the battle_* tables of the D1 database.",
+        default=REPO_ROOT / "data/battle/battle_data.sql",
+        help="Output SQL file for the battle_* tables of the D1 database (git-ignored).",
+    )
+    parser.add_argument(
+        "--apply",
+        choices=("local", "remote"),
+        help="Also run the generated SQL against the local or remote D1 database with wrangler.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Fetch and print detected metadata without writing files.")
     parser.add_argument(
