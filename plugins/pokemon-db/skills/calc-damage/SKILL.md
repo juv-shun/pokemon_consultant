@@ -19,14 +19,14 @@ description: ダメージ計算をしたい場合に使用する。
 
 **性格・努力値が指定されていない場合**、以下の優先度で参照する（ユーザーに確認しない）。
 
-1. **環境データを参照**: MCP サーバ `pokemon-master` の `battle_usages` テーブルから、そのポケモンの採用率1位の性格（`category = 'nature'`）と能力ポイント配分（`category = 'stat_spread'`）を使う。使用した値は「（環境データ参照）」と明示する。
+1. **環境データを参照**: MCP サーバ `pokemon-db` の `battle_usages` テーブルから、そのポケモンの採用率1位の性格（`category = 'nature'`）と能力ポイント配分（`category = 'stat_spread'`）を使う。使用した値は「（環境データ参照）」と明示する。
 2. **ユーザーへの確認**: 環境データに詳細がない（`battle_rankings.has_detail = 0` または未掲載）場合のみ確認する。
 
 その他の不明情報（天候・壁・持ち物等）はユーザーに確認する。
 
 ### 2. DB参照
 
-MCP サーバ `pokemon-master` の `query` ツールで必要なデータを取得する（テーブル定義は `describe_schema` で確認できる）。
+MCP サーバ `pokemon-db` の `query` ツールで必要なデータを取得する（テーブル定義は `describe_schema` で確認できる）。
 
 ```sql
 -- 攻撃側ポケモンの種族値・タイプ

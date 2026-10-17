@@ -18,12 +18,12 @@ description: 各ポケモンのステータス実数値を計算したいとき�
 
 **性格・努力値が指定されていない場合**、以下の優先度で参照する（ユーザーに確認しない）。
 
-1. **環境データを参照**: MCP サーバ `pokemon-master` の `battle_usages` テーブルから、そのポケモンの採用率1位の性格（`category = 'nature'`）と能力ポイント配分（`category = 'stat_spread'`）を使う。使用した値は「（環境データ参照）」と明示する。
+1. **環境データを参照**: MCP サーバ `pokemon-db` の `battle_usages` テーブルから、そのポケモンの採用率1位の性格（`category = 'nature'`）と能力ポイント配分（`category = 'stat_spread'`）を使う。使用した値は「（環境データ参照）」と明示する。
 2. **ユーザーへの確認**: 環境データに詳細がない（`battle_rankings.has_detail = 0` または未掲載）場合のみ確認する。
 
 ### 2. DB参照
 
-MCP サーバ `pokemon-master` の `query` ツールで種族値を取得する。
+MCP サーバ `pokemon-db` の `query` ツールで種族値を取得する。
 
 ```sql
 SELECT name_ja, base_hp, base_atk, base_def, base_spa, base_spd, base_spe
