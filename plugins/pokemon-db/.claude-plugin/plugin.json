@@ -1,0 +1,9 @@
+{
+  "name": "pokemon-db",
+  "description": "ポケモンチャンピオンズのマスターデータ・使用率統計を引く MCP サーバと、対戦の基礎知識・ダメージ計算・ステータス計算のスキル",
+  "author": {
+    "name": "juv-shun"
+  },
+  "repository": "https://github.com/juv-shun/pokemon_consultant",
+  "keywords": ["pokemon", "pokemon-champions", "mcp"]
+}

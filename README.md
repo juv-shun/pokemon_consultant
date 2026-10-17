@@ -1,26 +1,37 @@
-## 概要
+# pokemon_consultant
 
-このリポジトリは、ポケモンデータベースを構築し、MCP サーバーや Claude Skills などを利用し、ポケモン対戦における各種相談ができるリポジトリである。
+ポケモンチャンピオンズの対戦相談に使う Claude Code プラグイン `pokemon-db` と、その配布用マーケットプレイスを管理するリポジトリ。
 
-ポケモン対戦に特化したゲームとして、ポケモンチャンピオンズが存在しており、本リポジトリは、主に、このゲームを対象としている。
+## プラグイン `pokemon-db` の中身
 
-## データの構成
+| 種類 | 名前 | 内容 |
+| --- | --- | --- |
+| MCP サーバ | `pokemon-master` | ポケモン・技・特性のマスターデータと使用率統計（D1）を読み取り専用 SQL で引く。ツールは `describe_schema` と `query` |
+| スキル | `battle-basics` | 対戦ルール・育成・持ち物リスト・タイプ相性などの基礎知識 |
+| スキル | `calc-damage` | ダメージ計算 |
+| スキル | `calc-stats` | ステータス実数値の計算 |
 
-ポケモンのデータには、大きく２種類存在する。
+スキルは `/pokemon-db:calc-damage` のようにプラグイン名付きで呼び出せる。ダメージ計算・ステータス計算のスクリプトは Python 3 で動く。
 
-- ① 各ポケモンの覚える技などの基本的なデータ
-- ② ポケモンチャンピオンズで使われている統計情報
+## インストール
 
-①については、Cloudflare D1 のデータベースで管理している。Cloudflare Workers 上の MCP サーバ（`cloudflare/`、MCP サーバ名 `pokemon-master`）の `describe_schema` ツールでテーブル定義を確認し、`query` ツールで読み取り専用の SQL を実行して各種データを参照する。
-②も同じ D1 データベースの `battle_seasons` / `battle_rankings` / `battle_usages` テーブルで管理しており、`pokemon_id` で①のテーブルと JOIN できる。参照方法は `battle-data` スキルにまとめてある。
+Claude Code で次を実行する。
 
-## スキル運用
+```
+/plugin marketplace add juv-shun/pokemon_consultant
+/plugin install pokemon-db@juv-shun-pokemon
+```
 
-- `.claude/skills/` をスキルのマスター置き場とする。
-- `.agents/skills/` 配下には、対応する `.claude/skills/` へのシンボリックリンクのみを置く。
-- スキルの追加・更新・データ更新は `.claude/skills/` 側に対して行い、`.agents/skills/` 側の実体ファイルは直接編集しない。
-- Pokemon Champions の統計情報を更新するときは、`update-battle-data` スキルを使い、サイトから取得したデータを D1 に直接投入する。データの中身は日々変わるためリポジトリでは管理しない。
+更新は `/plugin marketplace update juv-shun-pokemon` で取り込む（`version` を固定していないので、main の最新がそのまま届く）。
 
-## 今後のTODOメモ
+claude.ai では、MCP サーバ `https://pokemon-consultant.shun-fukusumi.workers.dev/mcp` をカスタムコネクタとして登録して使う。
 
-- 環境ポケモンたちの主観的考察をスキルとして用意する。
+## リポジトリ構成
+
+```
+.claude-plugin/marketplace.json   マーケットプレイス定義
+plugins/pokemon-db/               配布するプラグイン本体
+cloudflare/                       MCP サーバ（Cloudflare Workers + D1）のソース。配布対象外
+data/champions/                   D1 マスターデータのシード。配布対象外
+.claude/skills/update-battle-data/ 使用率統計を D1 に投入する管理者用スキル。配布対象外
+```

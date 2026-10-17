@@ -5,7 +5,7 @@ description: Pokemon Champions のバトルデータを最新シーズンに更�
 
 # Battle Data Updater
 
-Pokemon Champions の統計ページから、`battle-data` スキルが参照する D1 の `battle_*` テーブルを更新する。
+Pokemon Champions の統計ページから、プラグイン `pokemon-db` の MCP サーバが参照する D1 の `battle_*` テーブルを更新する。
 データの中身は日々変わるため、リポジトリでは管理しない（生成 SQL は git 管理外）。
 
 ## 対象

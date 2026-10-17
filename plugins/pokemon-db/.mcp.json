@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pokemon-master": {
+      "type": "http",
+      "url": "https://pokemon-consultant.shun-fukusumi.workers.dev/mcp"
+    }
+  }
+}

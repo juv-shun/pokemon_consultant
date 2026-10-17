@@ -1,0 +1,14 @@
+{
+  "name": "juv-shun-pokemon",
+  "description": "ポケモンチャンピオンズの対戦相談に使うプラグイン集",
+  "owner": {
+    "name": "juv-shun"
+  },
+  "plugins": [
+    {
+      "name": "pokemon-db",
+      "source": "./plugins/pokemon-db",
+      "description": "ポケモンチャンピオンズのマスターデータ・使用率統計を引く MCP サーバと、対戦の基礎知識・ダメージ計算・ステータス計算のスキル"
+    }
+  ]
+}
