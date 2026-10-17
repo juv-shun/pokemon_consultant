@@ -180,13 +180,10 @@ def parse_moves(detail_html: str) -> list[list[str]]:
     """Parse move usage rows from detail page HTML."""
 
     rows: list[list[str]] = []
-    pattern = re.compile(
-        r'pokemon-trend__move-item[\s\S]*?'
-        r'pokemon-trend__move-name">([\s\S]*?)</span>[\s\S]*?'
-        r'pokemon-trend__move-rate[^>]*>\s*([0-9.]+)\s*<small>%</small>'
-    )
+    pattern = re.compile(r'class="pokemon-trend__move-name"\s+data-move-detail="([^"]*)"')
     for match in pattern.finditer(detail_html):
-        rows.append([clean_text(match.group(1)), f"{match.group(2)}%"])
+        move = json.loads(html.unescape(match.group(1)))
+        rows.append([str(move["name"]), f"{move['rate']}%"])
     return rows
 
 
